@@ -1,7 +1,13 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
+import path from "node:path";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import Subscriber from "./models/Subscriber.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const CLIENT_DIST = path.join(__dirname, "../client/dist");
 
 const PORT = process.env.PORT || 5050;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/coming-soon";
@@ -41,6 +47,12 @@ app.post("/api/subscribe", async (req, res) => {
     res.status(500).json({ error: "Something went wrong." });
   }
 });
+
+// Serve the built React app in production
+if (fs.existsSync(CLIENT_DIST)) {
+  app.use(express.static(CLIENT_DIST));
+  app.get("*", (req, res) => res.sendFile(path.join(CLIENT_DIST, "index.html")));
+}
 
 mongoose
   .connect(MONGO_URI)
